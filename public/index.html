@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFT Music App</title>
+</head>
+<body>
+    <form id="uploadForm">
+        <input type="text" id="songId" placeholder="Song ID" required />
+        <input type="text" id="artistAddress" placeholder="Artist Stacks Address" required />
+        <button type="submit">Mint NFT</button>
+    </form>
+
+    <button onclick="playSong()">Play Song</button>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const songId = document.getElementById('songId').value;
+            const artistAddress = document.getElementById('artistAddress').value;
+
+            // Call /upload endpoint with songId and artistAddress
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ songId, artistAddress }),
+                });
+                const data = await response.json();
+                alert(data.message);
+            } catch (error) {
+                console.error('Error minting NFT:', error);
+            }
+        });
+
+        async function playSong() {
+            const songId = document.getElementById('songId').value;
+
+            // Call /play endpoint with songId
+            try {
+                const response = await fetch('/play', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ songId }),
+                });
+                const data = await response.json();
+                alert(data.message);
+            } catch (error) {
+                console.error('Error playing song:', error);
+            }
+        }
+    </script>
+</body>
+</html>

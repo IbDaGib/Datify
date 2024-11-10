@@ -1,19 +1,28 @@
 const express = require('express');
 const app = express();
-const port = 3000;
+const PORT = 3000;
 
+// Middleware to parse JSON data
 app.use(express.json());
+app.use(express.static('public')); // Serve static files in the 'public' folder
 
+// Endpoint to handle the upload (minting NFT)
 app.post('/upload', (req, res) => {
-    // Logic to create NFT and store artist details
-    res.send("NFT Created");
+    const { songId, artistAddress } = req.body;
+    console.log(`Minting NFT for song ID: ${songId} by artist: ${artistAddress}`);
+    // TODO: Implement minting logic
+    res.json({ message: 'NFT minted successfully!' });
 });
 
+// Endpoint to handle playing a song
 app.post('/play', (req, res) => {
-    // Logic to track song plays and payments
-    res.send("Song Played");
+    const { songId } = req.body;
+    console.log(`Playing song ID: ${songId}`);
+    // TODO: Implement song playing logic
+    res.json({ message: 'Song played successfully!' });
 });
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+// Start the server
+app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
 });
