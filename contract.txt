@@ -1,0 +1,81 @@
+;; This is the contract we want to implement:
+;; NFT import
+(impl-trait 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait.nft-trait)
+
+;; Creating the NFT and the URI mapped to it
+(define-non-fungible-token datsong uint)
+
+;; Map to store the URI = song
+(define-map song-link (uint) (string))
+
+(define-data-var last-token-id uint u0)
+
+;; Error definitions
+(define-constant contract-owner tx-sender)
+(define-constant err-owner-only (err u100))
+(define-constant err-not-token-owner (err u101))
+(define-constant err-not-found (err u102))
+
+; Gets the last token minted
+(define-read-only (get-last-token-id)
+    (ok (var-get last-token-id))
+)
+
+; Gets the song URI of a specific token
+(define-read-only (get-token-uri (token-id uint))
+    (ok (map-get? song-link token-id))
+)
+
+; Get owner of a song by ID
+(define-read-only (get-owner (token-id uint))
+    (ok (nft-get-owner? datsong token-id))
+)
+
+;; Function to transfer ownership of a token
+(define-public (transfer (token-id uint) (sender principal) (recipient principal))
+    (begin
+        ;; Ensure the sender is the owner of the token
+        (asserts! (is-eq tx-sender sender) err-not-token-owner)
+        
+        ;; Transfer the token
+        (nft-transfer? datsong token-id sender recipient)
+        
+        ;; Return success message
+        (ok true)
+    )
+)
+
+(define-public (mint (recipient principal) (song-uri string))
+    (let
+        (
+            (token-id (+ (var-get last-token-id) u1))  ;; Increment the last token ID
+        )
+        ;; Ensure only the contract owner can mint tokens
+        (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+        
+        ;; Mint the token
+        (try! (nft-mint? datsong token-id recipient))
+        
+        ;; Map the song URI to the minted token ID
+        (map-set song-link token-id song-uri)
+        
+        ;; Update the last minted token ID
+        (var-set last-token-id token-id)
+        
+        ;; Return the token ID and the associated song URI
+        (ok { "token-id": token-id, "song-uri": song-uri })
+    )
+)
+
+(define-public (set-token-uri (token-id uint) (song string))
+    (let ((owner (nft-get-owner? datsong token-id)))
+        ;; Ensure that the caller is the owner of the token
+        (asserts! (is-eq tx-sender owner) err-not-token-owner)
+        
+        ;; Set the song for the token
+        (map-set song-link token-id song)
+        
+        ;; Return the new song as confirmation
+        (ok song)
+    )
+)
